@@ -22,7 +22,7 @@ def index():
         url=url,
     )
     soup = BeautifulSoup(response.content)
-    categories_container = soup.findAll(id=u'programs')[0]
+    categories_container = soup.findAll(id=u'broadcasts')[0]
     categories = categories_container.findAll(u'li')
     for category in categories:
         category_anchor = category.findAll(u'a')[0]
@@ -56,13 +56,13 @@ def show_category(category_url):
     )
     soup = BeautifulSoup(response.content)
     videos = soup.findAll(
-        u'li',
-        {u'class': u'broadcast-player__playlist__item'},
+        u'div', {u'class': u'broadcast-player'}
     )
+
     for video in videos:
         title = video.findAll(
-            u'span',
-            {u'class': u'broadcast-link__name '},
+            u'h1',
+            {u'class': u'broadcast-player-meta__title'},
         )[0].text
         timecode = video.findAll(u'time')[0][u'datetime']
         parsed_timecode = datetimeparse(timecode)
@@ -70,13 +70,13 @@ def show_category(category_url):
             title=title,
             time=parsed_timecode.strftime(u'%Y-%m-%d %H:%M'),
         )
-        video_url = video.findAll(u'a')[0][u'href']
+        video_url = video.findAll("source")[1]["src"]
         data.append(
             {
                 u'label': label,
                 u'path': {
                     u'endpoint': u'show_video',
-                    u'video_url': u'https://nos.nl{video_url}'.format(
+                    u'video_url': u'{video_url}'.format(
                         video_url=video_url,
                     ),
                 },
@@ -87,30 +87,4 @@ def show_category(category_url):
 
 
 def video_url_to_file_url(video_url):
-    response = requests.request(
-        method=u'GET',
-        url=video_url,
-    )
-    soup = BeautifulSoup(response.content)
-    video = soup.findAll(u'video')[0]
-    geoprotected = video.get(u'data-geoprotection', False)
-    sources = video.findAll(u'source')
-    sources = sorted(
-        sources,
-        key=lambda source: int(
-            quality_re.search(source[u'data-label']).group(0)
-        ),
-        reverse=True,
-    )
-    preferred_source = sources[0]
-    if geoprotected:
-        url = None
-        response = requests.request(
-            method=u'POST',
-            url=u'https://nos.nl/video/resolve/',
-            data=json.dumps([{u'file': preferred_source[u'src']}]),
-        ).json()
-        url = response[0][u'file']
-    else:
-        url = preferred_source['src']
-    return url
+    return video_url
