@@ -26,7 +26,7 @@ def index():
     categories = categories_container.findAll(u'li')
     for category in categories:
         category_anchor = category.findAll(u'a')[0]
-        category_text = category_anchor.text
+        category_text = category_anchor.findAll('span')[1].text
         category_url = category_anchor[u'href']
         if category_text in nl_only_categories:
             category_text = u'{category_text} (georestricted NL only)'.format(
@@ -70,19 +70,23 @@ def show_category(category_url):
             title=title,
             time=parsed_timecode.strftime(u'%Y-%m-%d %H:%M'),
         )
-        video_url = video.findAll("source")[1]["src"]
-        data.append(
-            {
-                u'label': label,
-                u'path': {
-                    u'endpoint': u'show_video',
-                    u'video_url': u'{video_url}'.format(
-                        video_url=video_url,
-                    ),
-                },
-                u'is_playable': True,
-            }
-        )
+        # add each quality version of the video as an entry
+        sub_videos = video.findAll("source")
+        for sub_video in sub_videos:
+            video_url = sub_video["src"]
+            sub_label = label + ' ' + sub_video["data-label"]
+            data.append(
+                {
+                    u'label': sub_label,
+                    u'path': {
+                        u'endpoint': u'show_video',
+                        u'video_url': u'{video_url}'.format(
+                            video_url=video_url,
+                        ),
+                    },
+                    u'is_playable': True,
+                }
+            )
     return data
 
 
