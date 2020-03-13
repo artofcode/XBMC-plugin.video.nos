@@ -85,7 +85,7 @@ def show_category(category_url):
                         u'path': {
                             u'endpoint': u'show_video',
                             u'video_url': u'{video_url}'.format(
-                                video_url=vid['url']['mp4'],
+                                video_url = file_url,
                             ),
                         },
                         u'is_playable': True,
